@@ -3,7 +3,7 @@
  * Plugin Name: Modo Mantenimiento Personalizado
  * Plugin URI: 
  * Description: Plugin personalizado de mantenimiento que permite seleccionar qué roles de usuario tienen acceso al frontend, aplicar a toda la web o URLs específicas y personalizar el mensaje.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: n3uron4
  * Author URI: 
  * License: GPL-2.0+
