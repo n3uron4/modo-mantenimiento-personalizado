@@ -2,7 +2,7 @@
 
 Un plugin de WordPress flexible y fácil de usar para poner tu sitio en modo mantenimiento con opciones de personalización avanzadas.
 
-![Versión](https://img.shields.io/badge/versión-1.0.1-blue)
+![Versión](https://img.shields.io/badge/versión-1.0.2-blue)
 ![WordPress](https://img.shields.io/badge/WordPress-6.4%2B-0073aa)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb3)
 ![License](https://img.shields.io/badge/licencia-GPL--2.0%2B-green)
@@ -14,6 +14,8 @@ Un plugin de WordPress flexible y fácil de usar para poner tu sitio en modo man
 ✅ **Aplicación selectiva**: Aplica el modo mantenimiento a todo el sitio o solo a URLs específicas.
 
 ✅ **Mensaje personalizable**: Editor completo para crear tu propio mensaje de mantenimiento con formato.
+
+✅ **HTML personalizado**: Opción para usar código HTML completamente personalizado para tu página de mantenimiento.
 
 ✅ **Personalización visual**: Cambia colores de fondo y texto para adaptarse a tu marca.
 
@@ -51,6 +53,14 @@ Una vez activado el plugin, encontrarás un nuevo menú llamado "Modo Mantenimie
 3. Cambia los colores de fondo y texto según tus preferencias
 4. Guarda los cambios para aplicarlos
 
+### Uso de HTML personalizado
+
+1. Activa la opción "Usar HTML personalizado" en la sección de Contenido
+2. Introduce tu código HTML completo en el campo habilitado
+3. Asegúrate de incluir todas las etiquetas necesarias (DOCTYPE, html, head, body, etc.)
+4. El HTML personalizado reemplazará completamente el diseño predeterminado
+5. Guarda los cambios para aplicarlos
+
 ### Aplicación a URLs específicas
 
 Si seleccionas "Solo URLs específicas", podrás especificar qué páginas o secciones de tu sitio estarán en mantenimiento:
@@ -75,6 +85,12 @@ Si seleccionas "Solo URLs específicas", podrás especificar qué páginas o sec
 - Escribe un mensaje atractivo anunciando la fecha de lanzamiento
 - Personaliza los colores para que coincidan con tu marca
 - Considera añadir enlaces a tus redes sociales en el mensaje
+
+### Crear una página de mantenimiento 100% personalizada
+- Activa la opción "Usar HTML personalizado"
+- Inserta tu propio código HTML con todos los elementos diseñados a tu medida
+- Incluye recursos externos como imágenes, CSS o JavaScript si lo necesitas
+- Crea una experiencia única para tus visitantes durante el mantenimiento
 
 ## 💡 Casos de uso
 
@@ -119,6 +135,12 @@ Este plugin es ideal para:
 Este plugin está licenciado bajo [GPL-2.0+](http://www.gnu.org/licenses/gpl-2.0.txt). Puedes usar, modificar y distribuir este software bajo los términos de esta licencia.
 
 ## 🔄 Registro de Cambios
+
+### 1.0.2 (03-04-2025)
+- Añadida funcionalidad para usar HTML personalizado como página de mantenimiento
+- Agregada opción para activar/desactivar el uso de HTML personalizado
+- Implementado campo para insertar código HTML personalizado
+- Mejorada la interfaz de usuario para mostrar/ocultar opciones según configuración
 
 ### 1.0.1 (31-03-2025)
 - Corregido bug en la verificación de URLs específicas

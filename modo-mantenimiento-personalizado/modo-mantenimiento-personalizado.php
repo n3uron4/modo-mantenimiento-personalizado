@@ -3,7 +3,7 @@
  * Plugin Name: Modo Mantenimiento Personalizado
  * Plugin URI: 
  * Description: Plugin personalizado de mantenimiento que permite seleccionar qué roles de usuario tienen acceso al frontend, aplicar a toda la web o URLs específicas y personalizar el mensaje.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: n3uron4
  * Author URI: 
  * License: GPL-2.0+
@@ -47,7 +47,9 @@ class Modo_Mantenimiento_Personalizado {
             'mensaje_personalizado' => 'Sitio en mantenimiento. Volveremos pronto.',
             'titulo_pagina' => 'Modo Mantenimiento',
             'color_fondo' => '#f1f1f1',
-            'color_texto' => '#333333'
+            'color_texto' => '#333333',
+            'usar_html_personalizado' => false,
+            'html_personalizado' => ''
         );
         
         // Añadir opciones solo si no existen
@@ -99,6 +101,10 @@ class Modo_Mantenimiento_Personalizado {
         // Colores
         $output['color_fondo'] = isset($input['color_fondo']) ? sanitize_hex_color($input['color_fondo']) : '#f1f1f1';
         $output['color_texto'] = isset($input['color_texto']) ? sanitize_hex_color($input['color_texto']) : '#333333';
+        
+        // HTML personalizado
+        $output['usar_html_personalizado'] = isset($input['usar_html_personalizado']) ? true : false;
+        $output['html_personalizado'] = isset($input['html_personalizado']) ? $input['html_personalizado'] : '';
         
         return $output;
     }
@@ -195,9 +201,9 @@ class Modo_Mantenimiento_Personalizado {
                         </table>
                     </div>
                     
-                    <!-- Sección de Personalización -->
+                    <!-- Sección de Contenido -->
                     <div class="mmp-card">
-                        <h2><?php _e('Personalización', 'modo-mantenimiento-personalizado'); ?></h2>
+                        <h2><?php _e('Contenido', 'modo-mantenimiento-personalizado'); ?></h2>
                         <table class="form-table">
                             <tr>
                                 <th scope="row"><?php _e('Título de la página', 'modo-mantenimiento-personalizado'); ?></th>
@@ -235,6 +241,24 @@ class Modo_Mantenimiento_Personalizado {
                                     <input type="color" name="mmp_opciones[color_texto]" value="<?php echo esc_attr($opciones['color_texto']); ?>">
                                 </td>
                             </tr>
+                            <!-- Nuevo campo para HTML personalizado -->
+                            <tr>
+                                <th scope="row"><?php _e('Usar HTML personalizado', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="mmp_opciones[usar_html_personalizado]" value="1" <?php checked(true, isset($opciones['usar_html_personalizado']) ? $opciones['usar_html_personalizado'] : false); ?>>
+                                        <?php _e('Usar HTML personalizado en lugar del diseño predeterminado', 'modo-mantenimiento-personalizado'); ?>
+                                    </label>
+                                    <p class="description"><?php _e('Si activas esta opción, se usará el HTML personalizado en lugar del mensaje y diseño predeterminados.', 'modo-mantenimiento-personalizado'); ?></p>
+                                </td>
+                            </tr>
+                            <tr id="html-personalizado-container" style="<?php echo (isset($opciones['usar_html_personalizado']) && $opciones['usar_html_personalizado']) ? '' : 'display: none;'; ?>">
+                                <th scope="row"><?php _e('Código HTML personalizado', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <textarea name="mmp_opciones[html_personalizado]" rows="15" class="large-text code"><?php echo isset($opciones['html_personalizado']) ? esc_textarea($opciones['html_personalizado']) : ''; ?></textarea>
+                                    <p class="description"><?php _e('Introduce el código HTML completo para tu página de mantenimiento. Asegúrate de incluir todas las etiquetas necesarias (DOCTYPE, html, head, body, etc).', 'modo-mantenimiento-personalizado'); ?></p>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 
@@ -252,6 +276,15 @@ class Modo_Mantenimiento_Personalizado {
                         $('#mmp-urls-especificas').show();
                     } else {
                         $('#mmp-urls-especificas').hide();
+                    }
+                });
+                
+                // Mostrar/ocultar campo de HTML personalizado
+                $('input[name="mmp_opciones[usar_html_personalizado]"]').change(function() {
+                    if ($(this).is(':checked')) {
+                        $('#html-personalizado-container').show();
+                    } else {
+                        $('#html-personalizado-container').hide();
                     }
                 });
             });
@@ -351,6 +384,13 @@ class Modo_Mantenimiento_Personalizado {
         status_header(503);
         header('Retry-After: 3600'); // Sugerir volver a intentar en 1 hora
         
+        // Si se ha activado el uso de HTML personalizado y hay contenido, mostrar ese HTML
+        if (isset($opciones['usar_html_personalizado']) && $opciones['usar_html_personalizado'] && !empty($opciones['html_personalizado'])) {
+            echo $opciones['html_personalizado'];
+            exit;
+        }
+        
+        // De lo contrario, mostrar la plantilla predeterminada
         // Asegurar que tenemos valores para todos los parámetros
         $titulo = !empty($opciones['titulo_pagina']) ? $opciones['titulo_pagina'] : __('Modo Mantenimiento', 'modo-mantenimiento-personalizado');
         $mensaje = !empty($opciones['mensaje_personalizado']) ? $opciones['mensaje_personalizado'] : __('Sitio en mantenimiento. Volveremos pronto.', 'modo-mantenimiento-personalizado');
