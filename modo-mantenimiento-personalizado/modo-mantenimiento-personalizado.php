@@ -3,7 +3,7 @@
  * Plugin Name: Modo Mantenimiento Personalizado
  * Plugin URI: 
  * Description: Plugin personalizado de mantenimiento que permite seleccionar qué roles de usuario tienen acceso al frontend, aplicar a toda la web o URLs específicas y personalizar el mensaje.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: n3uron4
  * Author URI: 
  * License: GPL-2.0+
@@ -28,6 +28,9 @@ class Modo_Mantenimiento_Personalizado {
         
         // Registrar configuraciones
         add_action('admin_init', array($this, 'registrar_configuraciones'));
+
+        // Procesar acciones para la URL de bypass
+        add_action('admin_init', array($this, 'procesar_acciones_bypass'));
         
         // Verificar si el modo mantenimiento está activo
         add_action('template_redirect', array($this, 'verificar_mantenimiento'), 1);
@@ -35,10 +38,25 @@ class Modo_Mantenimiento_Personalizado {
         // Agregar estilos y scripts
         add_action('wp_enqueue_scripts', array($this, 'agregar_estilos'));
         add_action('admin_enqueue_scripts', array($this, 'agregar_estilos_admin'));
+        
+        // Asegurar que el token de bypass esté configurado
+        $this->asegurar_token_bypass();
+    }
+    
+    // Asegurar que el token de bypass existe y no está vacío
+    private function asegurar_token_bypass() {
+        $opciones = get_option('mmp_opciones');
+        if (!isset($opciones['bypass_token']) || empty($opciones['bypass_token'])) {
+            $opciones['bypass_token'] = $this->generar_token_seguro();
+            update_option('mmp_opciones', $opciones);
+        }
     }
     
     // Función que se ejecuta al activar el plugin
     public function activar_plugin() {
+        // Crear token seguro
+        $bypass_token = $this->generar_token_seguro();
+        
         $opciones_predeterminadas = array(
             'modo_activo' => false,
             'roles_permitidos' => array('administrator'),
@@ -49,12 +67,25 @@ class Modo_Mantenimiento_Personalizado {
             'color_fondo' => '#f1f1f1',
             'color_texto' => '#333333',
             'usar_html_personalizado' => false,
-            'html_personalizado' => ''
+            'html_personalizado' => '',
+            // Nuevas opciones para URL de bypass
+            'bypass_activo' => false,
+            'bypass_token' => $bypass_token,
+            'bypass_duracion' => 24 // Duración en horas
         );
         
         // Añadir opciones solo si no existen
         if (!get_option('mmp_opciones')) {
             add_option('mmp_opciones', $opciones_predeterminadas);
+        } else {
+            // Si ya existen las opciones pero no las de bypass, añadirlas
+            $opciones_existentes = get_option('mmp_opciones');
+            if (!isset($opciones_existentes['bypass_token']) || empty($opciones_existentes['bypass_token'])) {
+                $opciones_existentes['bypass_activo'] = false;
+                $opciones_existentes['bypass_token'] = $bypass_token;
+                $opciones_existentes['bypass_duracion'] = 24;
+                update_option('mmp_opciones', $opciones_existentes);
+            }
         }
     }
     
@@ -106,6 +137,10 @@ class Modo_Mantenimiento_Personalizado {
         $output['usar_html_personalizado'] = isset($input['usar_html_personalizado']) ? true : false;
         $output['html_personalizado'] = isset($input['html_personalizado']) ? $input['html_personalizado'] : '';
         
+        // Opciones de bypass URL
+        $output['bypass_activo'] = isset($input['bypass_activo']) ? true : false;
+        $output['bypass_duracion'] = isset($input['bypass_duracion']) ? absint($input['bypass_duracion']) : 24;
+        
         return $output;
     }
     
@@ -114,6 +149,11 @@ class Modo_Mantenimiento_Personalizado {
         // Verificar permisos
         if (!current_user_can('manage_options')) {
             wp_die(__('No tienes permisos suficientes para acceder a esta página.', 'modo-mantenimiento-personalizado'));
+        }
+        
+        // Mostrar notificación si se regeneró el token
+        if (isset($_GET['token_regenerado']) && $_GET['token_regenerado'] === 'true') {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Token de bypass regenerado exitosamente.', 'modo-mantenimiento-personalizado') . '</p></div>';
         }
         
         // Obtener opciones guardadas
@@ -261,6 +301,55 @@ class Modo_Mantenimiento_Personalizado {
                             </tr>
                         </table>
                     </div>
+                    
+                    <!-- Nueva sección de URL de bypass -->
+                    <div class="mmp-card">
+                        <h2><?php _e('URL de Bypass', 'modo-mantenimiento-personalizado'); ?></h2>
+                        <p><?php _e('Configura una URL especial que permitirá a cualquier visitante acceder al sitio aunque esté en modo mantenimiento.', 'modo-mantenimiento-personalizado'); ?></p>
+                        
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php _e('Activar URL de bypass', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="mmp_opciones[bypass_activo]" value="1" <?php checked(true, isset($opciones['bypass_activo']) ? $opciones['bypass_activo'] : false); ?>>
+                                        <?php _e('Permitir acceso mediante URL de bypass', 'modo-mantenimiento-personalizado'); ?>
+                                    </label>
+                                    <p class="description"><?php _e('Si activas esta opción, cualquier persona que conozca la URL especial podrá acceder al sitio.', 'modo-mantenimiento-personalizado'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('URL de bypass', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <?php
+                                    $bypass_token = isset($opciones['bypass_token']) ? $opciones['bypass_token'] : '';
+                                    $bypass_url = home_url('?mmp_bypass=' . $bypass_token);
+                                    ?>
+                                    <input type="text" readonly value="<?php echo esc_url($bypass_url); ?>" class="large-text" onclick="this.select()">
+                                    <p class="description"><?php _e('Comparte esta URL solo con las personas que necesiten acceder al sitio durante el mantenimiento.', 'modo-mantenimiento-personalizado'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('Regenerar token', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <form method="post">
+                                        <?php wp_nonce_field('mmp_regenerar_token_nonce'); ?>
+                                        <input type="hidden" name="mmp_regenerar_token" value="1">
+                                        <input type="submit" class="button button-secondary" value="<?php _e('Regenerar Token', 'modo-mantenimiento-personalizado'); ?>">
+                                        <p class="description"><?php _e('Esto creará un nuevo token y la URL anterior dejará de funcionar.', 'modo-mantenimiento-personalizado'); ?></p>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('Duración del acceso', 'modo-mantenimiento-personalizado'); ?></th>
+                                <td>
+                                    <input type="number" name="mmp_opciones[bypass_duracion]" value="<?php echo esc_attr(isset($opciones['bypass_duracion']) ? $opciones['bypass_duracion'] : 24); ?>" min="1" step="1" class="small-text">
+                                    <?php _e('horas', 'modo-mantenimiento-personalizado'); ?>
+                                    <p class="description"><?php _e('Duración en horas que el visitante podrá acceder al sitio después de usar la URL de bypass.', 'modo-mantenimiento-personalizado'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 
                 </div><!-- .mmp-admin-container -->
                 
@@ -335,6 +424,26 @@ class Modo_Mantenimiento_Personalizado {
         // Si el modo no está activo, salir
         if (!isset($opciones['modo_activo']) || !$opciones['modo_activo']) {
             return;
+        }
+        
+        // Comprobar si existe una sesión de bypass válida
+        $bypass_cookie = 'mmp_bypass_' . md5(get_site_url());
+        if (isset($opciones['bypass_activo']) && $opciones['bypass_activo'] && isset($_COOKIE[$bypass_cookie])) {
+            return; // Hay una cookie de bypass válida, permitir acceso
+        }
+        
+        // Comprobar si se está usando una URL de bypass válida
+        if (isset($opciones['bypass_activo']) && $opciones['bypass_activo'] && 
+            isset($_GET['mmp_bypass']) && isset($opciones['bypass_token']) && 
+            $_GET['mmp_bypass'] === $opciones['bypass_token']) {
+            
+            // Establecer una cookie para mantener el acceso durante el tiempo configurado
+            $duracion = isset($opciones['bypass_duracion']) ? absint($opciones['bypass_duracion']) : 24;
+            setcookie($bypass_cookie, 'true', time() + $duracion * 3600, COOKIEPATH, COOKIE_DOMAIN, is_ssl());
+            
+            // Redirigir a la misma página sin el parámetro de bypass para evitar que se quede en la URL
+            wp_redirect(remove_query_arg('mmp_bypass'));
+            exit;
         }
         
         // Comprobar si el usuario tiene un rol permitido
@@ -454,6 +563,39 @@ class Modo_Mantenimiento_Personalizado {
         </body>
         </html>
         <?php
+    }
+
+    // Procesar acciones para la URL de bypass
+    public function procesar_acciones_bypass() {
+        // Verificar acción de regeneración del token
+        if (isset($_POST['mmp_regenerar_token']) && current_user_can('manage_options') && check_admin_referer('mmp_regenerar_token_nonce')) {
+            $opciones = get_option('mmp_opciones');
+            $opciones['bypass_token'] = $this->generar_token_seguro();
+            update_option('mmp_opciones', $opciones);
+            
+            // Redirigir para evitar reenvío del formulario
+            wp_redirect(add_query_arg(array('page' => 'mmp-configuracion', 'token_regenerado' => 'true'), admin_url('admin.php')));
+            exit;
+        }
+    }
+    
+    // Generar un token seguro para la URL de bypass
+    private function generar_token_seguro($longitud = 32) {
+        if (function_exists('random_bytes')) {
+            $bytes = random_bytes($longitud / 2);
+            return bin2hex($bytes);
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            $bytes = openssl_random_pseudo_bytes($longitud / 2);
+            return bin2hex($bytes);
+        } else {
+            // Fallback para sistemas que no tienen funciones criptográficamente seguras
+            $caracteres = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $token = '';
+            for ($i = 0; $i < $longitud; $i++) {
+                $token .= $caracteres[rand(0, strlen($caracteres) - 1)];
+            }
+            return $token;
+        }
     }
 }
 

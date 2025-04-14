@@ -2,7 +2,7 @@
 
 Un plugin de WordPress flexible y fácil de usar para poner tu sitio en modo mantenimiento con opciones de personalización avanzadas.
 
-![Versión](https://img.shields.io/badge/versión-1.0.2-blue)
+![Versión](https://img.shields.io/badge/versión-1.0.3-blue)
 ![WordPress](https://img.shields.io/badge/WordPress-6.4%2B-0073aa)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb3)
 ![License](https://img.shields.io/badge/licencia-GPL--2.0%2B-green)
@@ -16,6 +16,8 @@ Un plugin de WordPress flexible y fácil de usar para poner tu sitio en modo man
 ✅ **Mensaje personalizable**: Editor completo para crear tu propio mensaje de mantenimiento con formato.
 
 ✅ **HTML personalizado**: Opción para usar código HTML completamente personalizado para tu página de mantenimiento.
+
+✅ **URL de bypass**: Genera una URL especial que permite a cualquier persona acceder al sitio durante el mantenimiento.
 
 ✅ **Personalización visual**: Cambia colores de fondo y texto para adaptarse a tu marca.
 
@@ -69,6 +71,15 @@ Si seleccionas "Solo URLs específicas", podrás especificar qué páginas o sec
 2. Usa patrones con asteriscos como comodines (ejemplo: `/productos/*`)
 3. No incluyas el dominio, solo la ruta relativa que comienza con `/`
 
+### Configuración de la URL de bypass
+
+La URL de bypass permite a cualquier persona acceder al sitio aun cuando esté en modo mantenimiento:
+
+1. Activa la opción "Permitir acceso mediante URL de bypass" en la sección URL de Bypass
+2. Se generará automáticamente una URL especial que puedes copiar y compartir
+3. Establece la duración del acceso (en horas) que tendrán los visitantes al usar esta URL
+4. Puedes regenerar el token de seguridad en cualquier momento para invalidar URLs compartidas anteriormente
+
 ## 📋 Ejemplos de uso
 
 ### Bloquear todo el sitio excepto para administradores
@@ -92,6 +103,12 @@ Si seleccionas "Solo URLs específicas", podrás especificar qué páginas o sec
 - Incluye recursos externos como imágenes, CSS o JavaScript si lo necesitas
 - Crea una experiencia única para tus visitantes durante el mantenimiento
 
+### Compartir una URL de acceso para clientes o colaboradores
+- Activa el modo mantenimiento para el sitio completo
+- Configura la URL de bypass y establece una duración adecuada
+- Comparte la URL generada con los clientes o colaboradores específicos que necesiten acceso
+- Regenera el token cuando ya no necesites que esas personas tengan acceso
+
 ## 💡 Casos de uso
 
 Este plugin es ideal para:
@@ -100,6 +117,8 @@ Este plugin es ideal para:
 - **Mantenimiento programado**: Avisa a los usuarios de actualizaciones o cambios importantes
 - **Eventos con inscripción cerrada**: Muestra un mensaje personalizado cuando la inscripción ha finalizado
 - **Lanzamientos de nuevos productos**: Crea expectación mostrando una página de "Próximamente"
+- **Revisiones de clientes**: Permite a los clientes revisar un sitio en desarrollo mediante la URL de bypass mientras el resto de visitantes ven la página de mantenimiento
+- **Acceso temporal**: Concede acceso limitado por tiempo a los usuarios mediante la URL especial
 
 ## ❓ Solución de problemas
 
@@ -135,6 +154,13 @@ Este plugin es ideal para:
 Este plugin está licenciado bajo [GPL-2.0+](http://www.gnu.org/licenses/gpl-2.0.txt). Puedes usar, modificar y distribuir este software bajo los términos de esta licencia.
 
 ## 🔄 Registro de Cambios
+
+### 1.0.3 (10-04-2025)
+- Añadida funcionalidad de URL de bypass para permitir acceso temporal al sitio
+- Implementada generación de tokens seguros para las URLs de bypass
+- Agregada opción para configurar la duración del acceso mediante URL de bypass
+- Añadido botón para regenerar el token de bypass cuando sea necesario
+- Mejorada la seguridad del almacenamiento de cookies para acceso temporal
 
 ### 1.0.2 (03-04-2025)
 - Añadida funcionalidad para usar HTML personalizado como página de mantenimiento
